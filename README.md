@@ -14,7 +14,7 @@ I Have used the following [repo](https://github.com/willyfh/farl-face-segmentati
 
 ## Files architecture
 ```
-```
+
 Project
 │   README.md
 │   all python files
@@ -26,7 +26,7 @@ Project
 │   │  put src images here
 │   └───masks/
 │   │   put src masks here
-```
+
 ```
 
 ## Launch
