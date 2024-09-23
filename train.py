@@ -5,12 +5,12 @@ from tqdm import tqdm
 
 from data_gen import dst, src
 from dssim import dssim, gaussian_blur
-from model import DFM
+from model import LIAE
 
 writer = SummaryWriter()
 
 
-model = DFM().to("cuda")
+model = LIAE().to("cuda")
 
 mse_loss = torch.nn.MSELoss()
 
@@ -33,7 +33,7 @@ def compute_loss(img_true, img_pred, mask_true, mask_pred):
             filter_size=int(256 / 23.2),
         )
     ).mean()
-    mask_mse = ((mask_true[:,0,:,:] - mask_pred[:,0,:,:]) ** 2).mean()
+    mask_mse = ((mask_true[:, 0, :, :] - mask_pred[:, 0, :, :]) ** 2).mean()
 
     return 10 * mse + 5 * m_ssim + 10 * mask_mse
 
@@ -51,8 +51,10 @@ for step in tqdm(range(total_steps)):
     _, _, dst_pred, dst_mask_pred = model(dst_img)
 
     deepfake, _, true_face, _ = model(dst_img)
-    merged = dst_img * (1-dst_mask) + deepfake * dst_mask
-    deepfake = torch.cat([src_img, src_pred,dst_img, true_face, deepfake, merged], dim=0)
+    merged = dst_img * (1 - dst_mask) + deepfake * dst_mask
+    deepfake = torch.cat(
+        [src_img, src_pred, dst_img, true_face, deepfake, merged], dim=0
+    )
     if step % 100 == 0:  # Adjust the frequency as needed
         torchvision.utils.save_image(deepfake, f"run_images/deepfake_{step}.png")
 

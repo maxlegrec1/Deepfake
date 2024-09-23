@@ -33,15 +33,15 @@ class Upscale(nn.Module):
         self.kernel_size = kernel_size
         self.conv1 = nn.Conv2d(
             self.in_ch,
-            self.out_ch*4,
+            self.out_ch * 4,
             kernel_size=self.kernel_size,
             padding="same",
         )
 
     def forward(self, x):
         x = self.conv1(x)
-        x = F.leaky_relu(x,0.1)
-        x = depth_to_space(x,size = 2)
+        x = F.leaky_relu(x, 0.1)
+        x = depth_to_space(x, size=2)
         return x
 
     def get_out_ch(self):
@@ -104,19 +104,19 @@ class Decoder(nn.Module):
             3,
             kernel_size=3,
             padding="same",
-        )   
+        )
         self.final_conv2 = nn.Conv2d(
             self.enc_ch // 4,
             3,
             kernel_size=3,
             padding="same",
-        )          
+        )
         self.final_conv3 = nn.Conv2d(
             self.enc_ch // 4,
             3,
             kernel_size=3,
             padding="same",
-        )   
+        )
 
         self.upscalem0 = Upscale(self.enc_ch, d_mask_ch * 8)
         self.res1m = ResidualBlock(d_mask_ch * 8, kernel_size=3)
@@ -135,7 +135,18 @@ class Decoder(nn.Module):
         x = self.res2(x)
         x = self.enc_3(x)
         x = self.res3(x)
-        x = depth_to_space(torch.cat([self.final_conv(x),self.final_conv1(x),self.final_conv2(x),self.final_conv3(x)], dim = 1),2)
+        x = depth_to_space(
+            torch.cat(
+                [
+                    self.final_conv(x),
+                    self.final_conv1(x),
+                    self.final_conv2(x),
+                    self.final_conv3(x),
+                ],
+                dim=1,
+            ),
+            2,
+        )
         x = F.sigmoid(x)
 
         m = self.upscalem0(m)
@@ -156,46 +167,45 @@ class Inter(nn.Module):
         super().__init__()
         self.interAB_1 = nn.Linear(512 * 16 * 16, 256)
         self.interAB_2 = nn.Linear(256, 512 * 8 * 8)
-        self.conv_AB = Upscale(512,512)
+        self.conv_AB = Upscale(512, 512)
         self.interB_1 = nn.Linear(512 * 16 * 16, 256)
         self.interB_2 = nn.Linear(256, 512 * 8 * 8)
-        self.conv_B = Upscale(512,512)
+        self.conv_B = Upscale(512, 512)
         self.interA_1 = nn.Linear(512 * 16 * 16, 256)
         self.interA_2 = nn.Linear(256, 512 * 8 * 8)
-        self.conv_A = Upscale(512,512)
+        self.conv_A = Upscale(512, 512)
 
-
-        self.srcmat = torch.nn.Parameter(torch.empty((1,256),device="cuda"))
-        self.dstmat = torch.nn.Parameter(torch.empty((1,256),device="cuda"))
-
-
+        self.srcmat = torch.nn.Parameter(torch.empty((1, 256), device="cuda"))
+        self.dstmat = torch.nn.Parameter(torch.empty((1, 256), device="cuda"))
 
     def forward(self, x):
         x_AB = self.interAB_1(x.view(x.shape[0], -1))
         x_AB = self.interAB_2(x_AB)
-        x_AB = x_AB.view(-1,512,8,8)
+        x_AB = x_AB.view(-1, 512, 8, 8)
         x_AB = self.conv_AB(x_AB)
         x_B = self.interB_1(x.view(x.shape[0], -1))
-        x_B = self.interB_2(self.dstmat.expand(x.shape[0],-1)+ x_B)
-        x_B = x_B.view(-1,512,8,8)
+        x_B = self.interB_2(self.dstmat.expand(x.shape[0], -1) + x_B)
+        x_B = x_B.view(-1, 512, 8, 8)
         x_B = self.conv_B(x_B)
         x_A = self.interA_1(x.view(x.shape[0], -1))
-        x_A = self.interA_2(self.srcmat.expand(x.shape[0],-1)+ x_A)
-        x_A = x_A.view(-1,512,8,8)
+        x_A = self.interA_2(self.srcmat.expand(x.shape[0], -1) + x_A)
+        x_A = x_A.view(-1, 512, 8, 8)
         x_A = self.conv_A(x_A)
 
         recon_x_src = torch.cat([x_AB, x_A], dim=1)
         recon_x_dst = torch.cat([x_AB, x_B], dim=1)
 
         return recon_x_src, recon_x_dst
+
+
 def depth_to_space(x: torch.Tensor, size: int) -> torch.Tensor:
     """
     Rearrange depth data into spatial data.
-    
+
     Args:
         x (torch.Tensor): Input tensor in NCHW format.
         size (int): Block size for rearrangement.
-    
+
     Returns:
         torch.Tensor: Rearranged tensor in NCHW format.
     """
@@ -210,7 +220,8 @@ def depth_to_space(x: torch.Tensor, size: int) -> torch.Tensor:
 
     return x
 
-class DFM(nn.Module):
+
+class LIAE(nn.Module):
     def __init__(self):
         super().__init__()
         self.enc = Encoder()
