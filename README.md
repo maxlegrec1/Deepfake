@@ -1,6 +1,6 @@
 # Deepface attempts
 
-This is my attempts at making relatively good deepface.
+This is my attempt at making relatively good deepface.
 I base myself on the DeepFaceLab repo which was recently deleted.
 
 The Deepfake technology is LIAE. Please read the DeepFaceLab paper, or look at the code for more information.
