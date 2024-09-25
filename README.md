@@ -12,7 +12,7 @@ A good pytorch environement, I use very common librairies.
 I Have used the following [repo](https://github.com/willyfh/farl-face-segmentation) to generate the masks for the images. 
 
 
-## Files architecture
+# Files architecture
 ```
 Project
 │   README.md
@@ -27,11 +27,11 @@ Project
 │   │   put src masks here
 ```
 
-## Launch
+# Launch
 
 ```python train.py```
 
 
-## Results 
+# Results 
 In order (top to bottom) : src, src reconstruction, dst, dst reconstruction, deepfake
 ![Deepfake](assets/example.png)
